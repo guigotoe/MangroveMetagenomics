@@ -54,6 +54,19 @@ executer <- function(checkout,exec,succ,fail,logfile=NULL,checkin=NULL,pass=FALS
   }
 }
 #=============================================================================#
+########---- Phyloseq merge_sample function fixed ----#############
+#==============================================================================#
+mergesamplesps_mean <- function(ps,group){
+  library(phyloseq);library(tidyverse)
+  mps <- merge_samples(ps,group)
+  replicates <- sample_data(ps)$libname%>%sort()%>%table%>%as.data.frame#as_tibble()
+  otu_table(mps) <- otu_table(mps)/replicates$Freq
+  newmetdat <- sample_data(ps)%>%as_tibble()%>%distinct(libname, .keep_all = TRUE)%>%arrange(libname)%>%as.data.frame()
+  rownames(newmetdat) <- rownames(otu_table(mps))
+  sample_data(mps) <- newmetdat
+  return(mps)
+}
+#=============================================================================#
 ########---- from metaplhlan tsv to metagenomeSeq and Phyloseq ----#############
 #==============================================================================#
 MRdata <- function(mtaxlv,samples_info){

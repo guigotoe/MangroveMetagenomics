@@ -20,6 +20,7 @@ if(!file.exists(paste0(results,'merged_abundance_table.txt'))){
   system(mergemtphlan)
 }
 raw_metadata <- read_tsv(paste0('docs/metadata.txt'))
+raw_metadata$ID
 #raw_metadata <- raw_metadata%>%mutate(libname=map(raw_metadata$original.ID, function(x) x%>%str_split('\\.')%>%unlist%>%.[1])%>%unlist)%>%transmute(libname,!!!.)
 
 mtax_raw <- read.table(paste0(results,'/merged_abundance_table.txt'),quote='',sep="\t",skip='#',header=T,stringsAsFactors=F)%>%as_tibble()
@@ -30,28 +31,29 @@ taxid <- map(mtax$fullTax,function(x) x%>%str_split('\\|')%>%unlist%>%rev(.)%>%.
 mtax <- mtax%>%mutate(taxlevel=taxlev,tax=taxid)%>%transmute(taxlevel,tax, !!!.)
 libs <- colnames(mtax)[-c(1:3)]%>%map(.,function(x) x%>%str_split("_|\\.")%>%unlist%>%.[1])%>%unlist
 samples <- tibble(libname=libs,sample=colnames(mtax)[-c(1:3)])
-samples_info <- samples%>%left_join(raw_metadata,by=c('libname'='ID'))#%>%dplyr::select(-original.ID,-databank_used)
+samples_info <- samples%>%left_join(raw_metadata,by=c('libname'='ID'))%>%
+  mutate(libname=factor(libname,levels=c("MmtII1","MmtII2","MmtII3","3A","3B","3C","2A","2B","2C","4A","4B","4C",
+                                         "1","4","8","10","13","16","17","18","19","20","21","22","23","24","25","26","27","28")))#%>%dplyr::select(-original.ID,-databank_used)
 samples_info <- as.data.frame(lapply(samples_info,function (y) if(class(y)!="factor" ) as.factor(y) else y),stringsAsFactors=T)
 
 mtax_k<- mtax%>%filter(taxlevel==1);data_k <- MRdata(mtax_k,samples_info); ps_k <- pseqGen(data_k) 
 mtax_p<- mtax%>%filter(taxlevel==2);data_p <- MRdata(mtax_p,samples_info); ps_p <- pseqGen(data_p) 
-mtax_f <- mtax%>%filter(taxlevel==6);data_f <- MRdata(mtax_g,samples_info); ps_f <- pseqGen(data_f)
+mtax_f <- mtax%>%filter(taxlevel==5);data_f <- MRdata(mtax_f,samples_info); ps_f <- pseqGen(data_f)
 mtax_g <- mtax%>%filter(taxlevel==6);data_g <- MRdata(mtax_g,samples_info); ps_g <- pseqGen(data_g) 
 mtax_s <- mtax%>%filter(taxlevel==7);data_s <- MRdata(mtax_s,samples_info); ps_s <- pseqGen(data_s,tree=T) 
 
 ## Kingdom anaylsis
 tl <- 'Kingdom'
-ps <- ps_p
+ps <- ps_k
 ps.ord <- ordinate(ps, "NMDS", "bray")
 p1 <- plot_ordination(ps, ps.ord, type="samples", color="location", shape="type")+ geom_point(size=5) + ggtitle("Samples")
 p1
 ggsave(paste0(results,tl,'_NMDS_all_1.pdf'),p1,width=9, height=7)
-mps <- merge_samples(ps_p,"libname",fun="mean")
-replicates <- sample_data(ps_p)$libname%>%as.vector()%>%table%>%as.tibble()
-otu_table(mps) <- otu_table(mps)/replicates$n
-newmetdat <- sample_data(ps_p)%>%as_tibble()%>%distinct(libname, .keep_all = TRUE)%>%dplyr::select(-sample)%>%as.data.frame()
-rownames(newmetdat) <- rownames(otu_table(mps))
-sample_data(mps) <- newmetdat
+otu_table(ps)
+pdf(paste0(results,tl,'_BarPlot.pdf'),width=7, height=7,useDingbats=F)
+plot_bar(ps, fill = tl)
+dev.off()
+mps <- mergesamplesps_mean(ps,"libname")
 pdf(paste0(results,tl,'_BarPlot_merged.pdf'),width=7, height=7,useDingbats=F)
 plot_bar(mps, fill = tl)
 dev.off()
@@ -68,13 +70,7 @@ ps.ord <- ordinate(ps, "NMDS", "bray")
 p1 <- plot_ordination(ps, ps.ord, type="samples", color="location", shape="type")+ geom_point(size=5) + ggtitle("Samples")
 p1
 ggsave(paste0(results,tl,'_NMDS_all_1.pdf'),p1,width=9, height=7)
-
-mps <- merge_samples(ps_p,"libname",fun="mean")
-replicates <- sample_data(ps_p)$libname%>%as.vector()%>%table%>%as.tibble()
-otu_table(mps) <- otu_table(mps)/replicates$n
-newmetdat <- sample_data(ps_p)%>%as_tibble()%>%distinct(libname, .keep_all = TRUE)%>%dplyr::select(-sample)%>%as.data.frame()
-rownames(newmetdat) <- rownames(otu_table(mps))
-sample_data(mps) <- newmetdat
+mps <- mergesamplesps_mean(ps,"libname")
 pdf(paste0(results,tl,'_BarPlot_merged.pdf'),width=7, height=7,useDingbats=F)
 plot_bar(mps, fill = tl)
 dev.off()
@@ -85,13 +81,26 @@ p4 = plot_ordination(mps, mps.ord, type="split", color=tl, shape="location", lab
 ggsave(paste0(results,tl,'_NMDS_merged_split.pdf'),p4,width=9, height=7)
 ##
 ## family anaylsis
+
 tl <- 'Family'
 otu_table(ps_f)%>%colSums()
-ps_f.ord <- ordinate(ps_f, "NMDS", "bray")
-p1 <- plot_ordination(ps_f, ps_f.ord, type="samples", color="location", shape="salinity")+ geom_point(size=5) + ggtitle("Samples")
-ggsave(paste0(results,tl,'_NMDS_all.pdf'),p1,width=9, height=7)
+ps <- ps_f
+ps.ord <- ordinate(ps, "NMDS", "bray")
+p1 <- plot_ordination(ps, ps.ord, type="samples", color="location", shape="type")+ geom_point(size=5) + ggtitle("Samples")
+p1
+ggsave(paste0(results,tl,'_NMDS_all_1.pdf'),p1,width=9, height=7)
 
-tax.sum = tapply(taxa_sums(ps_f), tax_table(ps_f)[, tl], sum, na.rm=TRUE)
+mps <- mergesamplesps_mean(ps,"libname")
+pdf(paste0(results,tl,'_BarPlot_merged.pdf'),width=7, height=7,useDingbats=F)
+plot_bar(mps, fill = tl)
+dev.off()
+mps.ord <- ordinate(mps, "NMDS", "bray")
+p3 = plot_ordination(mps, mps.ord, type="samples", color="location", shape="salinity")+ geom_point(size=5) + ggtitle(paste0("Ordinal plot based on ",tl))
+ggsave(paste0(results,tl,'_NMDS_merged.pdf'),p3,width=9, height=7)
+p4 = plot_ordination(mps, mps.ord, type="split", color=tl, shape="location", label="libname", title="split")+ geom_point(size = 4)
+ggsave(paste0(results,tl,'_NMDS_merged_split.pdf'),p4,width=9, height=7)
+
+tax.sum = tapply(taxa_sums(ps), tax_table(ps)[, tl], sum, na.rm=TRUE)
 top10 = names(sort(tax.sum, TRUE))[1:10]
 psx = prune_taxa((tax_table(ps_f)[, tl] %in% top10), ps_f)
 
