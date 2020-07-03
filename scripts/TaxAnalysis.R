@@ -42,125 +42,43 @@ mtax_f <- mtax%>%filter(taxlevel==5);data_f <- MRdata(mtax_f,samples_info); ps_f
 mtax_g <- mtax%>%filter(taxlevel==6);data_g <- MRdata(mtax_g,samples_info); ps_g <- pseqGen(data_g) 
 mtax_s <- mtax%>%filter(taxlevel==7);data_s <- MRdata(mtax_s,samples_info); ps_s <- pseqGen(data_s,tree=T) 
 
+## For the graphs:
+## To change colors and point shapes of the graphs referes to the function in the toolbox and change accordingly
 ## Kingdom anaylsis
-tl <- 'Kingdom'
-ps <- ps_k
-ps.ord <- ordinate(ps, "NMDS", "bray")
-p1 <- plot_ordination(ps, ps.ord, type="samples", color="location", shape="type")+ geom_point(size=5) + ggtitle("Samples")
-p1
-ggsave(paste0(results,tl,'_NMDS_all_1.pdf'),p1,width=9, height=7)
-otu_table(ps)
-pdf(paste0(results,tl,'_BarPlot.pdf'),width=7, height=7,useDingbats=F)
-plot_bar(ps, fill = tl)
-dev.off()
-mps <- mergesamplesps_mean(ps,"libname")
-pdf(paste0(results,tl,'_BarPlot_merged.pdf'),width=7, height=7,useDingbats=F)
-plot_bar(mps, fill = tl)
-dev.off()
-mps.ord <- ordinate(mps, "NMDS", "bray")
-p3 = plot_ordination(mps, mps.ord, type="samples", color="location", shape="type")+ geom_point(size=5) + ggtitle(paste0("Ordinal plot based on ",tl))
-ggsave(paste0(results,tl,'_NMDS_merged.pdf'),p3,width=9, height=7)
-p4 = plot_ordination(mps, mps.ord, type="split", color=tl, shape="location", label="libname", title="split")
-ggsave(paste0(results,tl,'_NMDS_merged_split.pdf'),p4,width=9, height=7)
-##
+taxoverview(ps_k,'Kingdom',results,top10=F)
 ## phyllum anaylsis
-tl <- 'Phylum'
-ps <- ps_p
-ps.ord <- ordinate(ps, "NMDS", "bray")
-p1 <- plot_ordination(ps, ps.ord, type="samples", color="location", shape="type")+ geom_point(size=5) + ggtitle("Samples")
-p1
-ggsave(paste0(results,tl,'_NMDS_all_1.pdf'),p1,width=9, height=7)
-mps <- mergesamplesps_mean(ps,"libname")
-pdf(paste0(results,tl,'_BarPlot_merged.pdf'),width=7, height=7,useDingbats=F)
-plot_bar(mps, fill = tl)
-dev.off()
-mps.ord <- ordinate(mps, "NMDS", "bray")
-p3 = plot_ordination(mps, mps.ord, type="samples", color="location", shape="salinity")+ geom_point(size=5) + ggtitle(paste0("Ordinal plot based on ",tl))
-ggsave(paste0(results,tl,'_NMDS_merged.pdf'),p3,width=9, height=7)
-p4 = plot_ordination(mps, mps.ord, type="split", color=tl, shape="location", label="libname", title="split")
-ggsave(paste0(results,tl,'_NMDS_merged_split.pdf'),p4,width=9, height=7)
+taxoverview(ps_p,'Phylum',results,top10=F)
 ##
 ## family anaylsis
-
-tl <- 'Family'
-otu_table(ps_f)%>%colSums()
-ps <- ps_f
-ps.ord <- ordinate(ps, "NMDS", "bray")
-p1 <- plot_ordination(ps, ps.ord, type="samples", color="location", shape="type")+ geom_point(size=5) + ggtitle("Samples")
-p1
-ggsave(paste0(results,tl,'_NMDS_all_1.pdf'),p1,width=9, height=7)
-
-mps <- mergesamplesps_mean(ps,"libname")
-pdf(paste0(results,tl,'_BarPlot_merged.pdf'),width=7, height=7,useDingbats=F)
-plot_bar(mps, fill = tl)
-dev.off()
-mps.ord <- ordinate(mps, "NMDS", "bray")
-p3 = plot_ordination(mps, mps.ord, type="samples", color="location", shape="salinity")+ geom_point(size=5) + ggtitle(paste0("Ordinal plot based on ",tl))
-ggsave(paste0(results,tl,'_NMDS_merged.pdf'),p3,width=9, height=7)
-p4 = plot_ordination(mps, mps.ord, type="split", color=tl, shape="location", label="libname", title="split")+ geom_point(size = 4)
-ggsave(paste0(results,tl,'_NMDS_merged_split.pdf'),p4,width=9, height=7)
-
-tax.sum = tapply(taxa_sums(ps), tax_table(ps)[, tl], sum, na.rm=TRUE)
-top10 = names(sort(tax.sum, TRUE))[1:10]
-psx = prune_taxa((tax_table(ps_f)[, tl] %in% top10), ps_f)
-
-mps <- merge_samples(psx,"libname",fun="mean")
-replicates <- sample_data(ps_p)$libname%>%as.vector()%>%table%>%as.tibble()
-otu_table(mps) <- otu_table(mps)/replicates$n
-newmetdat <- sample_data(psx)%>%as_tibble()%>%distinct(libname, .keep_all = TRUE)%>%dplyr::select(-sample)%>%as.data.frame()
-rownames(newmetdat) <- rownames(otu_table(mps))
-sample_data(mps) <- newmetdat
-pdf(paste0(results,tl,'_BarPlot_merged.pdf'),width=7, height=7,useDingbats=F)
-plot_bar(mps, fill = tl)
-dev.off()
-mps.ord <- ordinate(mps, "NMDS", "bray")
-p3 = plot_ordination(mps, mps.ord, type="samples", color="location", shape="salinity")+ geom_point(size=5) + ggtitle("Ordinal plot based on Phylum")
-ggsave(paste0(results,tl,'_NMDS_merged.pdf'),p3,width=9, height=7)
-p4 = plot_ordination(mps, mps.ord, type="samples", color="location", shape="type")+ geom_point(size=5) + ggtitle("Ordinal plot based on Phylum")
-ggsave(paste0(results,tl,'_NMDS_merged_2.pdf'),p4,width=9, height=7)
+taxoverview(ps_f,'Family',results,top10=T)
 ##
 ## genus anaylsis
-tl <- 'Genus'
-ps_f.ord <- ordinate(ps_f, "NMDS", "bray")
-p1 <- plot_ordination(ps_f, ps_f.ord, type="samples", color="material", shape="archaeological_site")+ geom_point(size=5) + ggtitle("Samples")
-ggsave(paste0('taxbin/chew/',tl,'_NMDS_all.pdf'),p1,width=9, height=7)
-
-tax.sum = tapply(taxa_sums(ps_f), tax_table(ps_f)[, tl], sum, na.rm=TRUE)
-top10 = names(sort(tax.sum, TRUE))[1:10]
-psx = prune_taxa((tax_table(ps_f)[, tl] %in% top10), ps_f)
-
-mps <- merge_samples(psx,"libname",fun="mean")
-replicates <- sample_data(psx)%>%group_by(libname)%>%count
-otu_table(mps) <- otu_table(mps)/replicates$n
-newmetdat <- sample_data(psx)%>%as_tibble()%>%distinct(libname, .keep_all = TRUE)%>%dplyr::select(-sample,-short.ID)%>%as.data.frame()
-rownames(newmetdat) <- rownames(otu_table(mps))
-sample_data(mps) <- newmetdat
-pdf(paste0('taxbin/chew/',tl,'_BarPlot_merged.pdf'),width=7, height=7,useDingbats=F)
-plot_bar(mps, fill = tl)
-dev.off()
-
+taxoverview(ps_g,'Genus',results,top10=T)
 tl <- 'Genus'
 ps <- ps_g
 colSums(otu_table(ps))
 ps  = transform_sample_counts(ps, function(x) x+1)
 counts <- as.data.frame(lapply(otu_table(ps)%>%as.data.frame,function (y) if(class(y)!="integer" ) as.integer(y) else y),stringsAsFactors=F)
 rownames(counts) <- rownames(otu_table(ps))
+colnames(counts) <- colnames(otu_table(ps))
 otu_table(ps) <- otu_table(counts,taxa_are_rows=T)
-pShannon <- plot_richness(ps, x = "material", color = "archaeological_site",measures='Shannon') + geom_boxplot()+
-  theme(axis.text.x = element_text(angle=0, colour = "black"))#+geom_point(position=position_jitterdodge())
-ggsave(paste0('taxbin/chew/',tl,'_shannon_all.pdf'),pShannon,width=9, height=7)
-
+pShannon <- plot_richness(ps, x = "libname", color = "location",measures='Shannon') + geom_boxplot()+
+  theme(axis.text.x = element_text(colour = "black"))#+geom_point(position=position_jitterdodge())
+pShannon
+ggsave(paste0(results,tl,'_shannon_all.pdf'),pShannon,width=9, height=7)
 ##
 ## Species anaylsis
 tl <- 'Species'
 ps <- ps_s
-colSums(otu_table(ps))
+colSums(otu_table(ps)) # -> does not represent the whole (100%) community
 ps  = transform_sample_counts(ps, function(x) x+1)
 counts <- as.data.frame(lapply(otu_table(ps)%>%as.data.frame,function (y) if(class(y)!="integer" ) as.integer(y) else y),stringsAsFactors=F)
 rownames(counts) <- rownames(otu_table(ps))
+colnames(counts) <- colnames(otu_table(ps))
 otu_table(ps) <- otu_table(counts,taxa_are_rows=T)
-pShannon <- plot_richness(ps, x = "material", color = "archaeological_site",measures='Shannon') + geom_boxplot()#+geom_point(position=position_jitterdodge())
-ggsave(paste0('taxbin/chew/',tl,'_shannon_all.pdf'),pShannon,width=9, height=7)
+pShannon <- plot_richness(ps, x = "libname", color = "location",measures='Shannon') + geom_boxplot()#+geom_point(position=position_jitterdodge())
+pShannon
+#ggsave(paste0('taxbin/chew/',tl,'_shannon_all.pdf'),pShannon,width=9, height=7)
 
 #Remove OTUs that do not show appear more than 5 times in more than half the samples
 #wh0 = genefilter_sample(ps, filterfun_sample(function(x) x > 5), A=0.023*nsamples(ps))
@@ -177,35 +95,37 @@ ps <- transform_sample_counts(ps, function(x) x+1)
 sample_data(ps)%>%head
 
 ## dufferentially abundant
-## dc vs soil
-dcsoil = subset_samples(ps, material != "chew")
-dcsoil_deseq = phyloseq_to_deseq2(dcsoil, ~ material)
-dcsoil_deseq = DESeq2::DESeq(dcsoil_deseq, test="Wald", fitType="parametric")
-res = DESeq2::results(dcsoil_deseq, cooksCutoff = FALSE)
+## VC vs PC
+vcpc = subset_samples(ps, location %in%c("VC","PC")& type=='mGenome')
+vcpc_deseq = phyloseq_to_deseq2(vcpc, ~ location)
+vcpc_deseq = DESeq2::DESeq(vcpc_deseq, test="Wald", fitType="parametric")
+res = DESeq2::results(vcpc_deseq, cooksCutoff = FALSE)
 alpha = 0.01
-sigtab = res[which(res$padj < alpha), ]
+sigtab = res[which(res$pvalue < alpha), ]
 sigtab = cbind(as(sigtab, "data.frame"), as(tax_table(ps)[rownames(sigtab), ], "matrix"))
 head(sigtab)
-## dc vs chew
-dcchew = subset_samples(ps, material != "soil")
-dcchew_deseq = phyloseq_to_deseq2(dcchew, ~ material)
-dcchew_deseq = DESeq2::DESeq(dcchew_deseq, test="Wald", fitType="parametric")
-res2 = DESeq2::results(dcchew_deseq, cooksCutoff = FALSE)
-alpha = 0.01
-sigtab2 = res2[which(res2$padj < alpha), ]
+## vcm vs vcl
+salml = subset_samples(ps, location %in%c("VC_M","VC_L"))
+salml_deseq = phyloseq_to_deseq2(salml, ~ location)
+salml_deseq = DESeq2::DESeq(salml_deseq, test="Wald", fitType="parametric")
+res2 = DESeq2::results(salml_deseq, cooksCutoff = FALSE)
+alpha = 0.02
+sigtab2 = res2[which(res2$pvalue < alpha), ]
 sigtab2 = cbind(as(sigtab2, "data.frame"), as(tax_table(ps)[rownames(sigtab2), ], "matrix"))
 head(sigtab2)
-## dc vs soil
-chewsoil = subset_samples(ps, material != "dental_calculus")
-chewsoil_deseq = phyloseq_to_deseq2(chewsoil, ~ material)
-chewsoil_deseq = DESeq2::DESeq(chewsoil_deseq, test="Wald", fitType="parametric")
-res3 = DESeq2::results(chewsoil_deseq, cooksCutoff = FALSE)
+## Transcriptomics
+# M1vsM2
+m1m2 = subset_samples(ps, Punto %in% c(28,29))
+m1m2_deseq = phyloseq_to_deseq2(m1m2, ~ Punto)
+m1m2_dds <- estimateDispersionsGeneEst(m1m2_deseq)
+m1m2_deseq = DESeq2::DESeq(m1m2_deseq, test="Wald", fitType="parametric")
+res3 = DESeq2::results(m1m2_deseq, cooksCutoff = FALSE)
 alpha = 0.01
 sigtab3 = res3[which(res3$padj < alpha), ]
 sigtab3 = cbind(as(sigtab3, "data.frame"), as(tax_table(ps)[rownames(sigtab3), ], "matrix"))
 head(sigtab3)
 ####
-difftaxa <- c(rownames(sigtab),rownames(sigtab2),rownames(sigtab3))%>%unique
+difftaxa <- c(rownames(sigtab),rownames(sigtab2))%>%unique
 phy_stats <- tibble(!!tl:=taxa_names(ps)%>%str_replace('[a-z]__',''),tax=taxa_names(ps),N=nsamples(ps),PercentPhy=rowMeans(otu_table(ps)),sd=matrixStats::rowSds(otu_table(ps)))%>%mutate(se= sd/sqrt(N))
 abund <- subset(phy_stats,tax%in%difftaxa)  # Only take the phyla that are more than 0.01% abundant
 abund_ordered <- arrange(abund, desc(PercentPhy))
@@ -237,21 +157,16 @@ relabun_plot <- ggplot(abund, aes(y=PercentPhy , x=get(tl) )) + #coord_cartesian
         axis.text.y = element_blank(),
         axis.title.y = element_blank(),
         strip.background = element_rect(colour="black", fill = "black"),
-        plot.margin = unit(c(0.5, 0.3, 0.4, -0.), "cm"), #top, right, bottom, left
+        plot.margin = unit(c(0.5, 0.3, 1, -0.), "cm"), #top, right, bottom, left
         #plot.margin = unit(c(1.65, 2, 1.35, -1.35), "cm"), #top, right, bottom, left
         legend.position="none"); #relabun_plot
-
+relabun_plot
 ## Ploting ##
-mps <- merge_samples(ps,"material",fun="mean")
-replicates <- sample_data(ps)%>%group_by(material)%>%count
-otu_table(mps) <- otu_table(mps)/replicates$n
-newmetdat <- sample_data(ps)%>%as_tibble()%>%distinct(material, .keep_all = TRUE)%>%dplyr::select(-sample,-libname,-short.ID)%>%as.data.frame()
-rownames(newmetdat) <- rownames(otu_table(mps))
-sample_data(mps) <- newmetdat
+mps <- mergesamplesps_mean(ps,'libname')
+dfotus_raw <- otu_table(mps)%>%t()%>%as.data.frame()%>%mutate(tax=colnames(otu_table(mps)))%>%as_tibble()%>%filter(tax%in%difftaxa)%>%gather(-tax,key='location',value='abundance')%>%mutate(Sqrt.abundance=sqrt(abundance),log.abundance=log(abundance+1))
+dfotus <- dfotus_raw%>%filter(tax%in%difftaxa)%>%mutate(taxO=factor(dfotus%>%pull(tax)%>%str_replace('[a-z]__',''),levels=abund_ordered%>%pull(tl)%>%rev))
 
-dfotus <- otu_table(mps)%>%t()%>%as.data.frame()%>%mutate(tax=colnames(otu_table(mps)))%>%as_tibble()%>%filter(tax%in%difftaxa)%>%gather(-tax,key='material',value='abundance')%>%mutate(Sqrt.abundance=sqrt(abundance),log.abundance=log(abundance+1),taxO=factor(dfotus%>%pull(tax)%>%str_replace('[a-z]__',''),levels=abund_ordered%>%pull(tl)%>%rev))
-
-heat <- ggplot(dfotus, mapping = aes(x=material,y=taxO,fill=Sqrt.abundance))+geom_tile()+
+heat <- ggplot(dfotus, mapping = aes(x=location,y=taxO,fill=Sqrt.abundance))+geom_tile()+
   scale_fill_gradient(name = "Sqrt(Abundance)",low = "#FFFFFF",high = "#012345") +
   theme_bw() +
   theme(strip.placement = "outside",
@@ -262,54 +177,31 @@ heat <- ggplot(dfotus, mapping = aes(x=material,y=taxO,fill=Sqrt.abundance))+geo
   scale_y_discrete(limits = rev(levels(dfotus%>%pull(taxO))))
 
 
-heat <- ggplot(dfotus, mapping = aes(x=material,y=taxO,fill=Sqrt.abundance))+geom_tile() + 
+heat <- ggplot(dfotus, mapping = aes(x=location,y=taxO,fill=Sqrt.abundance))+geom_tile() + 
   scale_fill_gradient(name = "Sqrt(Abundance)",low = "#FFFFFF",high = "#012345")  + 
   theme_bw(base_size = 12) + scale_x_discrete(expand = c(0, 0)) + 
   scale_y_discrete(expand = c(0, 0)) + 
   ylab(paste(tl)) + xlab("Sample source") + 
   #facet_grid(cols=vars(material),scales = "free", space = "free") + 
-  theme(axis.text.x = element_text(colour="black", size=8, angle = 0, vjust = 1), 
+  theme(axis.text.x = element_text(colour="black", size=8, angle = 90, vjust = 1), 
         axis.text.y = element_text(colour="black", vjust=1, size=8),
         axis.title.x = element_text(face="bold", size=8),
         legend.title = element_text(face="bold", size=6),
         legend.text = element_text(size = 6),
-        legend.position = c(0.87, 0.13),#"left",top
+        legend.position = c(-0.3, 0.9),#"left",top
         axis.title.y = element_text(face="bold", size=8),
         plot.margin = unit(c(0.5, 0.1, 1, 1), "cm"), #top, right, bottom, left
         #plot.margin = unit(c(0.5, 1, 0.5, 0.5), "cm"), #top, right, bottom, left
         strip.text.x = element_text(size=8, face = "bold", colour = "black"),
         strip.background = element_blank())
 
-pdf(paste0('taxbin/chew/',tl,'_DiffAbundant.pdf'),width=9, height=7,useDingbats=F)
+heat
+pdf(paste0(results,tl,'_DiffAbundant.pdf'),width=9, height=7,useDingbats=F)
 grid::grid.newpage()
 grid::pushViewport(grid::viewport(layout=grid::grid.layout(1,2,width=c(0.83,0.17))))
 print(heat, vp=grid::viewport(layout.pos.row=1,layout.pos.col=1))
 print(relabun_plot, vp=grid::viewport(layout.pos.row=1,layout.pos.col=2)) 
 dev.off()
-
-
-
-####  Make a new dataframe with the percent abudance within the entire dataset!
-phy_stats <- tibble(!!tl:=taxa_names(ps)%>%str_replace('[a-z]__',''),N=nsamples(ps),PercentPhy=rowMeans(otu_table(ps)),sd=matrixStats::rowSds(otu_table(ps)))%>%mutate(se= sd/sqrt(N))
-abund <- subset(phy_stats,PercentPhy > pc)  # Only take the phyla that are more than 0.01% abundant
-abund_ordered <- arrange(abund, desc(PercentPhy))
-abund <- abund%>%mutate(!!tl:=factor(abund%>%pull(1),levels=abund_ordered%>%pull(1)%>%rev  ) )
-#Relative abundance plot 
-abund_plot <- ggplot(abund, aes(y=PercentPhy , x=get(tl) ))  +
-  #geom_boxplot(fill = "magenta4", colour = "black") + 
-  geom_bar(stat="identity", position=position_dodge(),  fill = "magenta4", colour = "black") +
-  theme_bw() + ggtitle(paste0(tl," Above ",pc,"% in All Samples")) +
-  xlab(paste0(tl)) + ylab("Mean Relative Abundance (%)") +
-  geom_errorbar(aes(ymin = PercentPhy -se, ymax = PercentPhy +se), width = 0.25) + coord_flip() +
-  theme(axis.title.x = element_text(face="bold", size=16),
-        axis.text.x = element_text(angle=0, colour = "black", size=14),
-        axis.text.y = element_text(colour = "black", size=14),
-        axis.title.y = element_text(face="bold", size=16),
-        plot.title = element_text(face="bold", size = 20),
-        legend.title = element_text(size=12, face="bold"),
-        legend.text = element_text(size = 12),
-        legend.position="none"); 
-abund_plot
 
 
 

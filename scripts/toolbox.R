@@ -67,6 +67,50 @@ mergesamplesps_mean <- function(ps,group){
   return(mps)
 }
 #=============================================================================#
+########---- TaxOverview function ----#############
+#==============================================================================#
+taxoverview <- function(ps,tl,results,top10=F){
+  #change the type, color and shape for the plot according to the needs.
+  #tl <- 'Family'
+  #otu_table(ps_f)%>%colSums()
+  #ps <- ps_f
+  ps.ord <- ordinate(ps, "NMDS", "bray")
+  p1 <- plot_ordination(ps, ps.ord, type="samples", color="location", shape="type")+ geom_point(size=5) + ggtitle("Samples")
+  ggsave(paste0(results,tl,'_NMDS_all_1.pdf'),p1,width=9, height=7)
+  pdf(paste0(results,tl,'_BarPlot.pdf'),width=7, height=7,useDingbats=F)
+  print(plot_bar(ps, fill = tl))
+  dev.off()
+  
+  mps <- mergesamplesps_mean(ps,"libname")
+  pdf(paste0(results,tl,'_BarPlot_merged.pdf'),width=7, height=7,useDingbats=F)
+  print(plot_bar(mps, fill = tl))
+  dev.off()
+  mps.ord <- ordinate(mps, "NMDS", "bray")
+  p3 = plot_ordination(mps, mps.ord, type="samples", color="location", shape="salinity")+ geom_point(size=5)+ggtitle(paste0("Ordinal plot based on ",tl))
+  ggsave(paste0(results,tl,'_NMDS_merged.pdf'),p3,width=9, height=7)
+  p4 = plot_ordination(mps, mps.ord, type="split", color=tl, shape="location",)+
+    ggtitle(paste0("Ordinal split plot based on top 10 ",tl))+geom_point(size = 4)+geom_text(aes(label=libname),hjust=-0.3,vjust=1,size=4)
+  ggsave(paste0(results,tl,'_NMDS_merged_split.pdf'),p4,width=9, height=7)
+  if(top10){
+    tax.sum = tapply(taxa_sums(ps), tax_table(ps)[, tl], sum, na.rm=TRUE)
+    top10 = names(sort(tax.sum, TRUE))[1:10]
+    psx = prune_taxa((tax_table(ps)[, tl] %in% top10), ps)
+    
+    mpst10 <- mergesamplesps_mean(psx,"libname")
+    pdf(paste0(results,tl,'_BarPlot_merged.pdf'),width=7, height=7,useDingbats=F)
+    plot_bar(mpst10, fill = tl)
+    dev.off()
+    mpst10.ord <- ordinate(mpst10, "NMDS", "bray")
+    p3 = plot_ordination(mpst10, mpst10.ord, type="samples", color="location", shape="salinity")+ geom_point(size=5) +  ggtitle(paste0("Ordinal plot based on top 10 ",tl))
+    ggsave(paste0(results,tl,'_NMDS_merged.pdf'),p3,width=9, height=7)
+    p4 = plot_ordination(mpst10, mpst10.ord, type="split", color=tl, shape="location")+
+      ggtitle(paste0("Ordinal split plot based on top 10 ",tl))+geom_point(size = 4)+geom_text(aes(label=libname),hjust=-0.3,vjust=1,size=4)
+    p4
+    ggsave(paste0(results,tl,'_NMDS_merged_2.pdf'),p4,width=9, height=7)
+  }
+  
+}
+#=============================================================================#
 ########---- from metaplhlan tsv to metagenomeSeq and Phyloseq ----#############
 #==============================================================================#
 MRdata <- function(mtaxlv,samples_info){
