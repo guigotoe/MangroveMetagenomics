@@ -106,7 +106,7 @@ taxoverview <- function(ps,tl,results,top10=F){
     p4 = plot_ordination(mpst10, mpst10.ord, type="split", color=tl, shape="location")+
       ggtitle(paste0("Ordinal split plot based on top 10 ",tl))+geom_point(size = 4)+geom_text(aes(label=libname),hjust=-0.3,vjust=1,size=4)
     p4
-    ggsave(paste0(results,tl,'_NMDS_merged_2.pdf'),p4,width=9, height=7)
+    ggsave(paste0(results,tl,'_NMDS_merged_2.pdf'),p4,width=13, height=7)
   }
   
 }
