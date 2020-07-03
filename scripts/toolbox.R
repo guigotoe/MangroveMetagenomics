@@ -97,8 +97,8 @@ taxoverview <- function(ps,tl,results,top10=F){
     psx = prune_taxa((tax_table(ps)[, tl] %in% top10), ps)
     
     mpst10 <- mergesamplesps_mean(psx,"libname")
-    pdf(paste0(results,tl,'_BarPlot_merged.pdf'),width=7, height=7,useDingbats=F)
-    plot_bar(mpst10, fill = tl)
+    pdf(paste0(results,tl,'_BarPlot_Top10merged.pdf'),width=7, height=7,useDingbats=F)
+    print(plot_bar(mpst10, fill = tl))
     dev.off()
     mpst10.ord <- ordinate(mpst10, "NMDS", "bray")
     p3 = plot_ordination(mpst10, mpst10.ord, type="samples", color="location", shape="salinity")+ geom_point(size=5) +  ggtitle(paste0("Ordinal plot based on top 10 ",tl))
