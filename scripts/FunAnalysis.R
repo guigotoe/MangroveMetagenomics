@@ -14,7 +14,16 @@ if(!dir.exists(results)) dir.create(results,showWarnings=F)
 if(!file.exists(paste0(results,'merged_abundance_table.txt'))){
   ##copy from server
   filepath <- '~/hamburg/mangroveCol/functprofile/'
-  humannfiles <- list.files(filepath,pattern='taxonomic_profile.tsv',recursive = T,full.names = T)
+  humannfiles <- list.files(filepath,pattern='ko_relab.tsv',recursive = T,full.names = T)
+  
+  f <- read_tsv(humannfiles[1])
+  numrows <- lapply(f%>%pull(1), function(x) if(str_detect(x,'\\|')==FALSE){return(names(x))})%>%unlist
+  
+  k=f%>%pull(1)
+  z=k[1]
+  names(z)
+  str_detect('\\|')
+  %>%if(.==FALSE){names(.)}
   
   mergemtphlan <- paste0('merge_metaphlan_tables.py ',paste0(mtphlanfiles,collapse=' '),' > ',results,'merged_abundance_table.txt')
   system(mergemtphlan)
