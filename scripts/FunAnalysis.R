@@ -3,7 +3,7 @@ mypath <- if(class(try(rstudioapi::getSourceEditorContext()$path,silent=TRUE))==
 toolbox <- paste0(mypath,'/toolbox.R')
 source(toolbox)
 
-requirements <- c('tidyverse','tictoc','phyloseq','vegan','metagenomeSeq','Rlof',"RColorBrewer","RAM",'curatedMetagenomicData','ape','matrixStats','DESeq2','pheatmap')
+requirements <- c('tidyverse','phyloseq','vegan','metagenomeSeq','Rlof',"RColorBrewer","RAM",'curatedMetagenomicData','ape','matrixStats','DESeq2','pheatmap')
 packages(requirements)
 theme_set(theme_bw())
 ##
