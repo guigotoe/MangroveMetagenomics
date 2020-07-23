@@ -23,7 +23,8 @@ if(!file.exists(paste0(results,'merged_abundance_table.txt'))){
     for (i in 1:length(humannfiles)){
       ffiles[[i]] <- read_tsv(humannfiles[i])
     }
-    fdf <- plyr::join_all(ffiles,by='# Gene Family',type='full')
+    if(any(colnames(ffiles[[i]])%>%str_detect('# Gene Family'))==FALSE){byc <- '# Pathway'}else{'# Gene Family'}
+    fdf <- plyr::join_all(ffiles,by=byc,type='full')
     write_tsv(fdf,paste0(results,'merged_',pat))
   }
 }
