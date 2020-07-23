@@ -3,7 +3,7 @@ mypath <- if(class(try(rstudioapi::getSourceEditorContext()$path,silent=TRUE))==
 toolbox <- paste0(mypath,'/toolbox.R')
 source(toolbox)
 
-requirements <- c('tidyverse','phyloseq','vegan','metagenomeSeq','Rlof',"RColorBrewer","RAM",'curatedMetagenomicData','ape','matrixStats','DESeq2','pheatmap')
+requirements <- c('tidyverse','tictoc','phyloseq','vegan','metagenomeSeq','Rlof',"RColorBrewer","RAM",'curatedMetagenomicData','ape','matrixStats','DESeq2','pheatmap','Maaslin2')
 packages(requirements)
 theme_set(theme_bw())
 ##
@@ -14,19 +14,19 @@ if(!dir.exists(results)) dir.create(results,showWarnings=F)
 if(!file.exists(paste0(results,'merged_abundance_table.txt'))){
   ##copy from server
   filepath <- '~/hamburg/mangroveCol/functprofile/'
-  humannfiles <- list.files(filepath,pattern='ko_relab.tsv',recursive = T,full.names = T)
+  pat <- 'ko_relab.tsv'
+  fun <- c('ko','ecs','eggnog','pfam')
+  pats <- c(paste0(fun,'_relab.tsv'),paste0(fun,'_cpm.tsv'),'pathabundance.tsv')
+  for pat in pats{
+    humannfiles <- list.files(filepath,pattern=pat,recursive = T,full.names = T)
+    ffiles <- list()
+    for (i in 1:length(humannfiles)){
+      ffiles[[i]] <- read_tsv(humannfiles[i])
+    }
+    fdf <- plyr::join_all(ffiles,by='# Gene Family',type='full')
+    write_tsv(fdf,paste0(results,'merged_',pat))
+  }
   
-  f <- read_tsv(humannfiles[1])
-  numrows <- lapply(f%>%pull(1), function(x) if(str_detect(x,'\\|')==FALSE){return(names(x))})%>%unlist
-  
-  k=f%>%pull(1)
-  z=k[1]
-  names(z)
-  str_detect('\\|')
-  %>%if(.==FALSE){names(.)}
-  
-  mergemtphlan <- paste0('merge_metaphlan_tables.py ',paste0(mtphlanfiles,collapse=' '),' > ',results,'merged_abundance_table.txt')
-  system(mergemtphlan)
 }
 raw_metadata <- read_tsv(paste0('docs/metadata.txt'))
 raw_metadata$ID
