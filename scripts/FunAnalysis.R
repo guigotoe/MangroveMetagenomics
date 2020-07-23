@@ -17,7 +17,7 @@ if(!file.exists(paste0(results,'merged_abundance_table.txt'))){
   pat <- 'ko_relab.tsv'
   fun <- c('ko','ecs','eggnog','pfam')
   pats <- c(paste0(fun,'_relab.tsv'),paste0(fun,'_cpm.tsv'),'pathabundance.tsv')
-  for pat in pats{
+  for (pat in pats){
     humannfiles <- list.files(filepath,pattern=pat,recursive = T,full.names = T)
     ffiles <- list()
     for (i in 1:length(humannfiles)){
@@ -26,7 +26,6 @@ if(!file.exists(paste0(results,'merged_abundance_table.txt'))){
     fdf <- plyr::join_all(ffiles,by='# Gene Family',type='full')
     write_tsv(fdf,paste0(results,'merged_',pat))
   }
-  
 }
 raw_metadata <- read_tsv(paste0('docs/metadata.txt'))
 raw_metadata$ID
